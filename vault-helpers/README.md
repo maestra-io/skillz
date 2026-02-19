@@ -10,7 +10,7 @@ All scripts are in `scripts/`.
 |--------|-------|--------|
 | `resolve_env.sh <env>` | Resolve env to Vault/Teleport vars | eval-able exports |
 | `vault_login.sh <env>` | OIDC login + save token | Token saved |
-| `vault_creds.sh <env> <db> [role]` | Get DB credentials | `username password` |
+| `vault_creds.sh [--raw] <env> <db> [role]` | Get DB credentials | clipboard or stdout |
 | `vault_config.sh <env> <db>` | Get DB connection config | `host database driver` |
 
 ## Environments

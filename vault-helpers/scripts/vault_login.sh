@@ -26,7 +26,10 @@ vault login -method=oidc || { echo "Vault login failed" >&2; exit 1; }
 
 # Save token for this environment
 mkdir -p "$HOME/.vault-tokens"
+chmod 700 "$HOME/.vault-tokens"
 cp "$HOME/.vault-token" "$HOME/.vault-tokens/$ENV_NAME"
+chmod 600 "$HOME/.vault-tokens/$ENV_NAME"
 
-export VAULT_TOKEN=$(cat "$HOME/.vault-token")
+VAULT_TOKEN=$(cat "$HOME/.vault-token")
+export VAULT_TOKEN
 echo "Token saved for $ENV_NAME" >&2

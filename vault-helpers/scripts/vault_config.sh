@@ -28,9 +28,11 @@ fi
 eval "$("$SCRIPT_DIR/resolve_env.sh" "$ENV_NAME")"
 
 # Load per-env token
+chmod 700 "$HOME/.vault-tokens" 2>/dev/null || true
 TOKEN_FILE="$HOME/.vault-tokens/$ENV_NAME"
 if [ -f "$TOKEN_FILE" ]; then
-	export VAULT_TOKEN=$(cat "$TOKEN_FILE")
+	VAULT_TOKEN=$(cat "$TOKEN_FILE")
+	export VAULT_TOKEN
 else
 	echo "Error: No cached token for $ENV_NAME (run: vault_login.sh $ENV_NAME)" >&2
 	exit 1
@@ -43,19 +45,61 @@ if ! vault token lookup > /dev/null 2>&1; then
 	exit 1
 fi
 
-# Try cdp-database first, then database
+# Environment-specific suffixes for platform databases
+case "$ENV_NAME" in
+	staging) ENV_SUFFIXES=("-staging") ;;
+	prod)    ENV_SUFFIXES=("-stable" "-beta") ;;
+	sigma)   ENV_SUFFIXES=("-sigma") ;;
+	maestra) ENV_SUFFIXES=("-omega" "-stable") ;;
+	*)       ENV_SUFFIXES=() ;;
+esac
+
+# Try exact name first, then with env suffixes appended
+TRIED_PATHS=()
 CONFIG=""
-for PREFIX in cdp-database database; do
-	VAULT_PATH="$PREFIX/config/db-$DB_NAME_CLEAN"
-	CONFIG=$(vault read -format=json "$VAULT_PATH" 2>/dev/null) && break
-	CONFIG=""
+for NAME_VARIANT in "$DB_NAME_CLEAN" "${ENV_SUFFIXES[@]/#/$DB_NAME_CLEAN}"; do
+	for PREFIX in cdp-database database; do
+		VAULT_PATH="$PREFIX/config/db-$NAME_VARIANT"
+		TRIED_PATHS+=("$VAULT_PATH")
+		CONFIG=$(vault read -format=json "$VAULT_PATH" 2>/dev/null) && break 2
+		CONFIG=""
+	done
 done
+
+# Fallback: fuzzy search via vault list
+if [ -z "$CONFIG" ]; then
+	echo "Exact match not found, searching..." >&2
+	MATCHES=()
+	for PREFIX in cdp-database database; do
+		LIST=$(vault list -format=json "$PREFIX/config" 2>/dev/null) || continue
+		while IFS= read -r entry; do
+			[ -n "$entry" ] && MATCHES+=("$PREFIX/config/$entry")
+		done < <(echo "$LIST" | jq -r '.[]' | python3 -c "
+import sys
+terms = sys.argv[1].lower().split('-')
+for line in sys.stdin:
+    e = line.strip().lower()
+    if all(t in e for t in terms):
+        print(line.strip())
+" "$DB_NAME_CLEAN")
+	done
+
+	if [ "${#MATCHES[@]}" -eq 1 ]; then
+		VAULT_PATH="${MATCHES[0]}"
+		echo "Found: $VAULT_PATH" >&2
+		CONFIG=$(vault read -format=json "$VAULT_PATH" 2>/dev/null)
+	elif [ "${#MATCHES[@]}" -gt 1 ]; then
+		echo "Error: Multiple matches found for '$DB_NAME_CLEAN':" >&2
+		for m in "${MATCHES[@]}"; do echo "  $m" >&2; done
+		echo "Please specify the exact name." >&2
+		exit 1
+	fi
+fi
 
 if [ -z "$CONFIG" ]; then
 	echo "Error: Failed to read connection config from Vault" >&2
 	echo "Tried paths:" >&2
-	echo "  cdp-database/config/db-$DB_NAME_CLEAN" >&2
-	echo "  database/config/db-$DB_NAME_CLEAN" >&2
+	for p in "${TRIED_PATHS[@]}"; do echo "  $p" >&2; done
 	exit 1
 fi
 
@@ -77,7 +121,7 @@ DATABASE=$(echo "$CONN_URL" | grep -o 'database=[^&]*' | sed 's/database=//' || 
 DRIVER=$(echo "$CONN_URL" | sed 's|://.*||')
 
 if [ -z "$HOST" ]; then
-	echo "Error: Could not parse host from connection_url: $CONN_URL" >&2
+	echo "Error: Could not parse host from connection_url" >&2
 	exit 1
 fi
 
