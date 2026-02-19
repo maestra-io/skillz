@@ -23,11 +23,12 @@ Depends on: `../vault-helpers/` (sibling skill directory) for Vault operations.
 ```
 
 The script:
-1. Fetches connection config (host, database, driver) via vault-helpers `vault_config.sh`
-2. Fetches credentials (username, password) via vault-helpers `vault_creds.sh --raw` (single Vault read)
-3. Creates or updates the connection entry in `~/Library/Application Support/LINQPad/ConnectionsV2.xml`
-4. Adds/updates password in macOS Keychain (service: `LINQPad`, account lowercased)
-5. Restarts LINQPad to pick up changes
+1. Ensures Teleport VNet is running (env-aware, via vault-helpers `ensure_vnet.sh`)
+2. Fetches connection config (host, database, driver) via vault-helpers `vault_config.sh`
+3. Fetches credentials (username, password) via vault-helpers `vault_creds.sh --raw` (single Vault read)
+4. Creates or updates the connection entry in `~/Library/Application Support/LINQPad/ConnectionsV2.xml`
+5. Adds/updates password in macOS Keychain (service: `LINQPad`, account lowercased)
+6. Restarts LINQPad to pick up changes
 
 ## How to Determine Environment
 
@@ -69,6 +70,10 @@ Then retry the linqpad_connect.sh command.
 
 **Environment not recognized:**
 - Valid environments: staging, prod, sigma, maestra
+
+**VNet running for wrong proxy:**
+- The script checks that VNet is running for the correct Teleport proxy (e.g. `teleport.maestra.io` for maestra, `teleport.mindbox.ru` for staging/prod/sigma)
+- If VNet is running for a different proxy, stop it with `sudo pkill -f 'tsh.*vnet'` and retry automatically
 
 **LINQPad not found:**
 - The script tries "LINQPad 8 beta.app" first, then "LINQPad.app"

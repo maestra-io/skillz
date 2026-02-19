@@ -3,11 +3,12 @@
 # Usage: ./linqpad_connect.sh <env> <db-name> [reader|writer|owner]
 #
 # Steps:
-#   1. Get connection config (host, database, driver) from Vault
-#   2. Get credentials (username, password) from Vault (single read)
-#   3. Create or update ConnectionsV2.xml entry
-#   4. Add/update password in macOS Keychain
-#   5. Restart LINQPad
+#   1. Ensure Teleport VNet is running
+#   2. Get connection config (host, database, driver) from Vault
+#   3. Get credentials (username, password) from Vault (single read)
+#   4. Create or update ConnectionsV2.xml entry
+#   5. Add/update password in macOS Keychain
+#   6. Restart LINQPad
 
 set -e
 
@@ -31,7 +32,12 @@ ENV_NAME="$1"
 DB_NAME="$2"
 ROLE="${3:-reader}"
 
-# Step 1: Get connection config
+# Step 1: Ensure VNet is running
+echo "Ensuring VNet is running..." >&2
+eval "$("$VAULT_SCRIPTS/resolve_env.sh" "$ENV_NAME")"
+"$VAULT_SCRIPTS/ensure_vnet.sh" >&2
+
+# Step 2: Get connection config
 echo "Fetching connection config for $DB_NAME in $ENV_NAME..." >&2
 CONFIG_OUTPUT=$("$VAULT_SCRIPTS/vault_config.sh" "$ENV_NAME" "$DB_NAME")
 HOST=$(echo "$CONFIG_OUTPUT" | awk '{print $1}')
@@ -47,7 +53,7 @@ echo "  Host: $HOST" >&2
 echo "  Database: $DATABASE" >&2
 echo "  Driver: $DRIVER" >&2
 
-# Step 2: Get credentials (single Vault read via --raw)
+# Step 3: Get credentials (single Vault read via --raw)
 echo "Fetching credentials (role: $ROLE)..." >&2
 CREDS_OUTPUT=$("$VAULT_SCRIPTS/vault_creds.sh" --raw "$ENV_NAME" "$DB_NAME" "$ROLE")
 USERNAME=$(echo "$CREDS_OUTPUT" | head -1)
@@ -74,7 +80,7 @@ case "$DRIVER" in
 		;;
 esac
 
-# Step 3: Create or update ConnectionsV2.xml
+# Step 4: Create or update ConnectionsV2.xml
 echo "Updating ConnectionsV2.xml..." >&2
 
 if [ ! -f "$CONNECTIONS_FILE" ]; then
@@ -153,14 +159,14 @@ else:
 tree.write(connections_file, encoding="utf-8", xml_declaration=True)
 PYEOF
 
-# Step 4: Add/update password in macOS Keychain
+# Step 5: Add/update password in macOS Keychain
 echo "Updating macOS Keychain..." >&2
 KEYCHAIN_ACCOUNT=$(python3 -c "print(f'.database:${DRIVER}.${HOST} ${USERNAME}'.lower())")
 
 security add-generic-password -s "LINQPad" -a "$KEYCHAIN_ACCOUNT" -w "$PASSWORD" -U ~/Library/Keychains/login.keychain-db
 echo "  Keychain account: $KEYCHAIN_ACCOUNT" >&2
 
-# Step 5: Restart LINQPad
+# Step 6: Restart LINQPad
 echo "Restarting LINQPad..." >&2
 pkill -x "LINQPad 8 beta" 2>/dev/null || pkill -f "LINQPad" 2>/dev/null || true
 sleep 1

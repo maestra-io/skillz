@@ -47,6 +47,15 @@ Outputs `host database driver` (space-separated) to stdout.
 
 Opens OIDC login in browser, saves token to `~/.vault-tokens/{env}`.
 
+### Ensure Teleport VNet
+
+```bash
+eval "$(./scripts/resolve_env.sh <env>)"
+./scripts/ensure_vnet.sh
+```
+
+Ensures Teleport VNet is running for the correct proxy. Requires `TSH_BIN`, `TSH_PROXY`, `TSH_TELEPORT_HOME` (set by `resolve_env.sh`). Exits with error if VNet is running for a different proxy — must stop it first with `sudo pkill -f 'tsh.*vnet'`.
+
 ### Resolve Environment
 
 ```bash
