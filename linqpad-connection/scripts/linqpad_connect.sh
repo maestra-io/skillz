@@ -7,8 +7,7 @@
 #   2. Get credentials (username, password) from Vault (single read)
 #   3. Create or update ConnectionsV2.xml entry
 #   4. Add/update password in macOS Keychain
-#   5. Copy password to clipboard
-#   6. Restart LINQPad
+#   5. Restart LINQPad
 
 set -e
 
@@ -158,16 +157,10 @@ PYEOF
 echo "Updating macOS Keychain..." >&2
 KEYCHAIN_ACCOUNT=$(python3 -c "print(f'.database:${DRIVER}.${HOST} ${USERNAME}'.lower())")
 
-# Delete existing entry if present, then add new one
-security delete-generic-password -s "LINQPad" -a "$KEYCHAIN_ACCOUNT" ~/Library/Keychains/login.keychain-db 2>/dev/null || true
 security add-generic-password -s "LINQPad" -a "$KEYCHAIN_ACCOUNT" -w "$PASSWORD" -U ~/Library/Keychains/login.keychain-db
 echo "  Keychain account: $KEYCHAIN_ACCOUNT" >&2
 
-# Step 5: Copy password to clipboard
-printf '%s' "$PASSWORD" | pbcopy
-echo "Password copied to clipboard" >&2
-
-# Step 6: Restart LINQPad
+# Step 5: Restart LINQPad
 echo "Restarting LINQPad..." >&2
 pkill -x "LINQPad 8 beta" 2>/dev/null || pkill -f "LINQPad" 2>/dev/null || true
 sleep 1

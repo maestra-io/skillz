@@ -27,8 +27,7 @@ The script:
 2. Fetches credentials (username, password) via vault-helpers `vault_creds.sh --raw` (single Vault read)
 3. Creates or updates the connection entry in `~/Library/Application Support/LINQPad/ConnectionsV2.xml`
 4. Adds/updates password in macOS Keychain (service: `LINQPad`, account lowercased)
-5. Copies password to clipboard
-6. Restarts LINQPad to pick up changes
+5. Restarts LINQPad to pick up changes
 
 ## How to Determine Environment
 

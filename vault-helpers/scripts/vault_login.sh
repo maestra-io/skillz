@@ -22,14 +22,13 @@ eval "$("$SCRIPT_DIR/resolve_env.sh" "$ENV_NAME")"
 unset VAULT_TOKEN
 
 echo "Logging in to Vault at $VAULT_ADDR ..." >&2
-vault login -method=oidc || { echo "Vault login failed" >&2; exit 1; }
+TOKEN=$(vault login -method=oidc -token-only) || { echo "Vault login failed" >&2; exit 1; }
 
 # Save token for this environment
 mkdir -p "$HOME/.vault-tokens"
 chmod 700 "$HOME/.vault-tokens"
-cp "$HOME/.vault-token" "$HOME/.vault-tokens/$ENV_NAME"
+echo "$TOKEN" > "$HOME/.vault-tokens/$ENV_NAME"
 chmod 600 "$HOME/.vault-tokens/$ENV_NAME"
 
-VAULT_TOKEN=$(cat "$HOME/.vault-token")
-export VAULT_TOKEN
+export VAULT_TOKEN="$TOKEN"
 echo "Token saved for $ENV_NAME" >&2
