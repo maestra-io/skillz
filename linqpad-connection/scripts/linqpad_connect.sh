@@ -34,7 +34,8 @@ ROLE="${3:-reader}"
 
 # Step 1: Ensure VNet is running
 echo "Ensuring VNet is running..." >&2
-eval "$("$VAULT_SCRIPTS/resolve_env.sh" "$ENV_NAME")"
+ENV_EXPORTS="$("$VAULT_SCRIPTS/resolve_env.sh" "$ENV_NAME")" || { echo "Error: Failed to resolve environment '$ENV_NAME'" >&2; exit 1; }
+eval "$ENV_EXPORTS"
 "$VAULT_SCRIPTS/ensure_vnet.sh" >&2
 
 # Step 2: Get connection config
@@ -68,10 +69,10 @@ echo "  Username: $USERNAME" >&2
 
 # Map driver to EFProvider
 case "$DRIVER" in
-	sqlserver)
+	sqlserver|mssql)
 		EF_PROVIDER="Microsoft.EntityFrameworkCore.SqlServer"
 		;;
-	postgres)
+	postgres|postgresql)
 		EF_PROVIDER="Npgsql.EntityFrameworkCore.PostgreSQL"
 		;;
 	*)
@@ -167,9 +168,15 @@ security add-generic-password -s "LINQPad" -a "$KEYCHAIN_ACCOUNT" -w "$PASSWORD"
 echo "  Keychain account: $KEYCHAIN_ACCOUNT" >&2
 
 # Step 6: Restart LINQPad
-echo "Restarting LINQPad..." >&2
-pkill -x "LINQPad 8 beta" 2>/dev/null || pkill -f "LINQPad" 2>/dev/null || true
-sleep 1
-open "/Applications/LINQPad 8 beta.app" 2>/dev/null || open "/Applications/LINQPad.app" 2>/dev/null || echo "Warning: Could not open LINQPad app" >&2
+LINQPAD_APP=$(ls -d /Applications/LINQPad*.app 2>/dev/null | head -1)
+if [ -n "$LINQPAD_APP" ]; then
+	LINQPAD_NAME=$(basename "$LINQPAD_APP" .app)
+	echo "Restarting $LINQPAD_NAME..." >&2
+	pkill -x "$LINQPAD_NAME" 2>/dev/null || pkill -f "LINQPad" 2>/dev/null || true
+	sleep 1
+	open "$LINQPAD_APP"
+else
+	echo "Warning: No LINQPad app found in /Applications/" >&2
+fi
 
 echo "Done! Connection ready for $DATABASE on $HOST (role: $ROLE, expires in 12h)" >&2

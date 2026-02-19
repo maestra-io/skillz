@@ -21,7 +21,12 @@ vault_init() {
 		return 1
 	fi
 
-	eval "$("$_VAULT_COMMON_DIR/resolve_env.sh" "$env_name")"
+	local env_exports
+	if ! env_exports="$("$_VAULT_COMMON_DIR/resolve_env.sh" "$env_name")"; then
+		echo "Error: Failed to resolve environment '$env_name'" >&2
+		return 1
+	fi
+	eval "$env_exports"
 
 	chmod 700 "$HOME/.vault-tokens" 2>/dev/null || true
 	local token_file="$HOME/.vault-tokens/$env_name"

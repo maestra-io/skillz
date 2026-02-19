@@ -76,4 +76,4 @@ Then retry the linqpad_connect.sh command.
 - If VNet is running for a different proxy, stop it with `sudo pkill -f 'tsh.*vnet'` and retry automatically
 
 **LINQPad not found:**
-- The script tries "LINQPad 8 beta.app" first, then "LINQPad.app"
+- The script auto-detects any `LINQPad*.app` in `/Applications/`
