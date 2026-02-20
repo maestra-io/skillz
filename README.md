@@ -42,4 +42,4 @@ Get database credentials from Vault, login, switch environments, copy creds to c
 
 ## Need something else?
 
-If you lack a skill or want to request one, check the [How do I](https://www.notion.so/How-do-I-30ce08805078806b8de3f45e66b1a1e8) page.
+If you lack a skill or want to request one, check the [👾 How do I](https://www.notion.so/How-do-I-30ce08805078806b8de3f45e66b1a1e8) page.
