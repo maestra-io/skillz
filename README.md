@@ -29,7 +29,9 @@ npx maestra-skills install connect-postgres-dbeaver
 ## Available Skills
 
 - **connect-postgres-dbeaver** — Automate PostgreSQL connections through DBeaver using Teleport and Vault. Zero manual password entry.
+- **linqpad-connection** — Create or refresh LINQPad database connections using Vault credentials.
 - **search-code** — Search code across Mindbox/Maestra repositories spanning GitLab and GitHub.
+- **vault-helpers** — Get database credentials from Vault, login, switch environments, copy creds to clipboard.
 
 ## Need something else?
 
