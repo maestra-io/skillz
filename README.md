@@ -1,6 +1,6 @@
 # Skillz
 
-AI skills for Maestra platform automation.
+AI skills for Maestra development and fun.
 
 ## Installation
 
