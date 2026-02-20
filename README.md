@@ -1,6 +1,6 @@
 # Skillz
 
-AI skills for Maestra/Mindbox platform automation.
+AI skills for Maestra platform automation.
 
 ## Installation
 
@@ -16,22 +16,29 @@ Symlink the skills you need:
 # Claude Code
 ln -s ~/skillz/connect-postgres-dbeaver ~/.claude/skills/connect-postgres-dbeaver
 
-# Claude Code agents
+# Other agents (Cursor, Codex, etc.)
 ln -s ~/skillz/search-code ~/.agents/skills/search-code
 ```
 
 Or use npx:
 
 ```bash
-npx maestra-skills install connect-postgres-dbeaver
+npx skills add git@github.com:maestra-io/skillz.git --skill connect-postgres-dbeaver
 ```
 
 ## Available Skills
 
-- **connect-postgres-dbeaver** — Automate PostgreSQL connections through DBeaver using Teleport and Vault. Zero manual password entry.
-- **linqpad-connection** — Create or refresh LINQPad database connections using Vault credentials.
-- **search-code** — Search code across Mindbox/Maestra repositories spanning GitLab and GitHub.
-- **vault-helpers** — Get database credentials from Vault, login, switch environments, copy creds to clipboard.
+### connect-postgres-dbeaver
+Automate PostgreSQL connections through DBeaver using Teleport and Vault. Zero manual password entry.
+
+### linqpad-connection
+Create or refresh LINQPad database connections using Vault credentials.
+
+### search-code
+Search code across Maestra repositories spanning GitLab and GitHub.
+
+### vault-helpers
+Get database credentials from Vault, login, switch environments, copy creds to clipboard.
 
 ## Need something else?
 
